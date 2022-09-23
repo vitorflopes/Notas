@@ -39,7 +39,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="email@gmail.com"
+            android:hint="email@exemplo.com"
             android:textSize="20sp"
             app:layout_constraintEnd_toStartOf="@+id/btnSairH"
             app:layout_constraintStart_toStartOf="parent"

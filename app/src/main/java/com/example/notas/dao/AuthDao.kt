@@ -20,7 +20,7 @@ class AuthDao {
         }
 
         fun deslogar() {
-            auth.signOut()
+            return auth.signOut()
         }
     }
 }
