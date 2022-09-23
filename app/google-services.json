@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "388819035141",
+    "project_id": "notas-19320",
+    "storage_bucket": "notas-19320.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:388819035141:android:d67d91a216110a55c8e86c",
+        "android_client_info": {
+          "package_name": "com.example.notas"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "388819035141-51dsev5corvjdf6npl3th9ll5t12hem1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBpnNnpfGYhexixjCGqnXas2TXZHOh0YU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "388819035141-51dsev5corvjdf6npl3th9ll5t12hem1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
