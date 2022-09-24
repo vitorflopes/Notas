@@ -35,6 +35,8 @@ class HomeFragment : Fragment() {
             findNavController().navigate(direction)
         }
 
+        binding.tvEmailH.text = viewModel.retornaUsuario()!!.email.toString()
+
         return view
     }
 }
