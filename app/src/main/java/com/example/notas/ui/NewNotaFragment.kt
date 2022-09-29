@@ -1,13 +1,19 @@
 package com.example.notas.ui
 
+import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.Base64.encodeToString
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -16,6 +22,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.ViewModelProvider
@@ -31,8 +38,10 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.MasterKeys
+import android.util.Base64
+import com.example.notas.dao.AuthDao
 
-class NewNotaFragment : Fragment() {
+class NewNotaFragment : Fragment(), LocationListener {
 
     private var _binding: FragmentNewNotaBinding? = null
     private val binding get() = _binding!!
@@ -40,6 +49,8 @@ class NewNotaFragment : Fragment() {
 
     var dataAgora: String? = null
     var fotoTirada = false
+
+    private lateinit var locationManager: LocationManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -57,6 +68,7 @@ class NewNotaFragment : Fragment() {
     private fun setup() {
         setupView()
         setupClickListeners()
+        getLocation()
     }
 
     private fun setupView() {
@@ -98,39 +110,45 @@ class NewNotaFragment : Fragment() {
                 val nomeArquivoTexto = "$nomePadrao.txt"
                 val nomeArquivoFoto = "$nomePadrao.fig"
 
+                val conteudo = binding.tvLocation.text.toString() + "\n" + binding.etTextoNN.text.toString()
+                val conteudoCript = Base64.encodeToString(cipher(conteudo), Base64.DEFAULT)
+
+                gravarCriptografado(nomeArquivoTexto, conteudoCript)
+
                 val fullDirNameText = "${context?.filesDir}/$nomeArquivoTexto"
                 val fullDirNameFoto = "${context?.filesDir}/$nomeArquivoFoto"
                 val photoFile = File(fullDirNameFoto)
                 val textFile = File(fullDirNameText)
 
+                val local = requireContext().getDir("PastaIgor", Context.MODE_PRIVATE)
+                val teste = requireContext().getExternalFilesDir("PastaIgor")
             }
         }
     }
 
-    fun gravarCriptografado(nomeArquivoCompleto: String, conteudo: String) {
+    private fun getLocation() {
+        locationManager = requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        // Gera chave mestra para criptografia
-        val masterKeyAlias: String = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-
-        // cria arquivo
-        val file = File(nomeArquivoCompleto)
-        // Configura arquivo criptografado
-        val encryptedFile: EncryptedFile = EncryptedFile.Builder(
-            file,
-            requireContext(),
-            masterKeyAlias,
-            EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
-        ).build()
-
-        // write to the encrypted file
-        val encryptedOutputStream: FileOutputStream = encryptedFile.openFileOutput()
-        val writer = BufferedWriter(OutputStreamWriter(encryptedOutputStream))
-
-        //  writer.use fecha o output automaticamente após escrever
-        writer.use {
-            it.write(conteudo)
+        if (
+            (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED)
+        ) {
         }
 
+        locationManager.requestLocationUpdates(
+            LocationManager.GPS_PROVIDER,
+            5000,
+            5f,
+            this
+
+        )
+    }
+
+    fun gravarCriptografado(nomeArquivoCompleto: String, conteudo: String) {
+        val encryptedOutputStream: FileOutputStream = requireActivity().openFileOutput(nomeArquivoCompleto, Context.MODE_PRIVATE)
+        encryptedOutputStream.write(conteudo.toByteArray())
     }
 
     // Lê arquivo de forma simples
@@ -210,7 +228,7 @@ class NewNotaFragment : Fragment() {
         val fullDirName = "${context?.filesDir}/$photoName"
         val photoFile = File(fullDirName)
 
-        if (photoFile?.exists() == true) {
+        if (photoFile.exists()) {
             binding.btnTirarFotoNN.doOnLayout { measuredView ->
                 val scaledBitmap = getScaledBitmap(
                     photoFile.path,
@@ -233,7 +251,7 @@ class NewNotaFragment : Fragment() {
 
         val c = Criptografador()
 
-        var chave = c.getSecretKey()
+        val chave = c.getSecretKey()
         return cipher(original,chave)
     }
 
@@ -241,8 +259,8 @@ class NewNotaFragment : Fragment() {
         if (chave != null) {
             Cipher.getInstance("AES/CBC/PKCS7Padding").run {
                 init(Cipher.ENCRYPT_MODE,chave)
-                var valorCripto = doFinal(original.toByteArray())
-                var ivCripto = ByteArray(16)
+                val valorCripto = doFinal(original.toByteArray())
+                val ivCripto = ByteArray(16)
                 iv.copyInto(ivCripto,0,0,16)
                 return ivCripto + valorCripto
             }
@@ -253,14 +271,14 @@ class NewNotaFragment : Fragment() {
     fun decipher(cripto: ByteArray): String{
         val c = Criptografador()
 
-        var chave = c.getSecretKey()
+        val chave = c.getSecretKey()
         return decipher(cripto,chave)
     }
 
     fun decipher(cripto: ByteArray, chave: SecretKey?): String{
         if (chave != null) {
             Cipher.getInstance("AES/CBC/PKCS7Padding").run {
-                var ivCripto = ByteArray(16)
+                val ivCripto = ByteArray(16)
                 var valorCripto = ByteArray(cripto.size-16)
                 cripto.copyInto(ivCripto,0,0,16)
                 cripto.copyInto(valorCripto,0,16,cripto.size)
@@ -269,6 +287,10 @@ class NewNotaFragment : Fragment() {
                 return String(doFinal(valorCripto))
             }
         } else return ""
+    }
+
+    override fun onLocationChanged(p0: Location) {
+        binding.tvLocation.text = "${"%.4f".format(p0.latitude)}\n${"%.4f".format(p0.longitude)}"
     }
 }
 

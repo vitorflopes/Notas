@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Notas</string>
+
+    <string name="permission_camera_required">Precisamos tirar uma foto para sua nota.</string>
+    <string name="ok">OK</string>
+    <string name="permission_location_required">Precisamos saber a localização para completar sua nota.</string>
+    <string name="permission_camera_location_required">Precisamos da sua foto e da sua localização para preencher os dados da sua foto.</string>
 </resources>
