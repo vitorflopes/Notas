@@ -11,7 +11,6 @@
     <uses-feature android:name="android.hardware.camera"
         android:required="false"/>
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -22,6 +21,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Notas"
         tools:targetApi="31">
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-1754457021414641~5444737794"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

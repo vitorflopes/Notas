@@ -2,21 +2,26 @@ package com.example.notas.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.notas.R
-import com.example.notas.databinding.FragmentCadastroBinding
 import com.example.notas.databinding.FragmentHomeBinding
 import com.google.android.material.snackbar.Snackbar
+import javax.crypto.Cipher
+import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
+
 
 class HomeFragment : Fragment() {
 
@@ -37,6 +42,28 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val view = binding.root
         viewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
+
+        val listNotas = arrayListOf<String>()
+
+        val listFiles = requireContext().filesDir.listFiles()
+        if(!listFiles.isNullOrEmpty()) {
+            for (file in listFiles!!) {
+                if (file.name.toString() != "rList" && !file.name.contains(".JPG")) {
+                    val texto = file.readText()
+                    val drc = Base64.decode(texto, Base64.DEFAULT)
+                    val txtdrc = decipher(drc)
+
+                    val nomeTexto = file.name.toString().removeSuffix(".txt").replace("_", "/")
+
+                    val conteudoView = "\n" + nomeTexto + "\n\n" + txtdrc + "\n"
+
+                    listNotas.add(conteudoView)
+                }
+            }
+        }
+
+        val adapter: ArrayAdapter<String> = ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1, listNotas)
+        binding.listVNotas.adapter = adapter
 
         setupPermissionsLaunchers()
 
@@ -178,5 +205,26 @@ class HomeFragment : Fragment() {
                 permissionRequest.toTypedArray()
             )
         }
+    }
+
+    fun decipher(cripto: ByteArray): String{
+        val c = Criptografador()
+
+        val chave = c.getSecretKey()
+        return decipher(cripto,chave)
+    }
+
+    fun decipher(cripto: ByteArray, chave: SecretKey?): String{
+        if (chave != null) {
+            Cipher.getInstance("AES/CBC/PKCS7Padding").run {
+                val ivCripto = ByteArray(16)
+                var valorCripto = ByteArray(cripto.size-16)
+                cripto.copyInto(ivCripto,0,0,16)
+                cripto.copyInto(valorCripto,0,16,cripto.size)
+                val ivParams = IvParameterSpec(ivCripto)
+                init(Cipher.DECRYPT_MODE,chave,ivParams)
+                return String(doFinal(valorCripto))
+            }
+        } else return ""
     }
 }

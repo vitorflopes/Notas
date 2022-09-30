@@ -39,7 +39,7 @@ import javax.crypto.spec.IvParameterSpec
 import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.MasterKeys
 import android.util.Base64
-import com.example.notas.dao.AuthDao
+import androidx.navigation.fragment.findNavController
 
 class NewNotaFragment : Fragment(), LocationListener {
 
@@ -106,13 +106,12 @@ class NewNotaFragment : Fragment(), LocationListener {
 
         binding.btnSalvarNotaNN.setOnClickListener {
             if (validate()) {
-                val nomePadrao = binding.etNomeNotaNN.text.toString() + dataAgora
+                val nomePadrao = binding.etNomeNotaNN.text.toString() + " " + dataAgora
                 val nomeArquivoTexto = "$nomePadrao.txt"
                 val nomeArquivoFoto = "$nomePadrao.fig"
 
                 val conteudo = binding.tvLocation.text.toString() + "\n" + binding.etTextoNN.text.toString()
                 val conteudoCript = Base64.encodeToString(cipher(conteudo), Base64.DEFAULT)
-
                 gravarCriptografado(nomeArquivoTexto, conteudoCript)
 
                 val fullDirNameText = "${context?.filesDir}/$nomeArquivoTexto"
@@ -120,8 +119,7 @@ class NewNotaFragment : Fragment(), LocationListener {
                 val photoFile = File(fullDirNameFoto)
                 val textFile = File(fullDirNameText)
 
-                val local = requireContext().getDir("PastaIgor", Context.MODE_PRIVATE)
-                val teste = requireContext().getExternalFilesDir("PastaIgor")
+                findNavController().popBackStack()
             }
         }
     }
